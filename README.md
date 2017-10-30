@@ -6,4 +6,5 @@ This project has as an objective using different libraries for viewing 3D protei
 The libraries are:
 
 · Mathematical library, matplotlib
+
 · Videogame engine library, Panda3D
