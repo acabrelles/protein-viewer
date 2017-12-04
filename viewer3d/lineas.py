@@ -3,10 +3,13 @@ from panda3d.core import ColorAttrib
 from panda3d.core import LVecBase4f
 from panda3d.core import NodePath, PandaNode
 from panda3d.core import AmbientLight, DirectionalLight
+from panda3d.core import LineSegs
 
 from Bio.PDB import *
 
-import dict
+import numpy as np
+
+from molecular_data import colorrgba, vrad
 
 
 #Creamos la base de la ventana
@@ -14,41 +17,35 @@ base = ShowBase()
 
 #Desglosamos archivo PDB
 parser = PDBParser(QUIET=True,PERMISSIVE=True)
-structure = parser.get_structure('MACROH2A', '1yd9.pdb')
+structure = parser.get_structure('MACROH2A', 'data/1yd9.pdb')
 
 #Creamos el modelo
 
 pnode = render.attachNewNode("Model")
 
-#Listado de residuos, solo contando los aminoacidos
-residues = [residue for residue in structure.get_residues() if residue.get_resname() in dict.resdict.keys()]
-for residue in residues:
-    resid = residue.get_resname()
-    color=dict.colorrgba(dict.restype(resid))
-    atoms = [atom for atom in residue.get_atoms()]
-    for atom in atoms:
-        x,y,z=atom.coord
-        id=atom.get_id()
-        a = loader.loadModel("atom_sphere")
-        a.setPos(x, y, z)
-        a.setColor(color)
-        a.setScale(dict.vrad(id))
-        a.reparentTo(pnode)
+for chain in structure.get_chains():
+	carr = np.random.rand(3,1)
+	ccolor = float(carr[0]),float(carr[1]),float(carr[2]),1.0
+	can_atoms = [atom for atom in chain.get_atoms() if atom.get_name() == 'CA' or atom.get_name() == 'N']
+	can_coordinates = [atom.coord for atom in can_atoms]
+	for atom in can_atoms:
+		x,y,z = atom.coord
+		id=atom.get_id()
+		a = loader.loadModel("data/atom_sphere")
+		a.setPos(x,y,z)
+		a.reparentTo(pnode)
+		a.setColor(ccolor)
+		a.setScale(vrad(id)/2.5)
 
-pnode.flattenStrong        
-
-#Seleccionamos el resto de 'residuos' que ha determinado el parser, sin incluir aguas
-residues2 = [residue for residue in structure.get_residues() if not residue in residues and residue.get_resname() != 'HOH']
-for residue in residues2:
-    atoms = [atom for atom in residue.get_atoms()]
-    for atom in atoms:
-        x,y,z=atom.coord
-        id=atom.get_id()
-        a = loader.loadModel("atom_sphere")
-        a.setPos(x, y, z)
-        a.setColor(dict.colorrgba(id))
-        a.setScale(dict.vrad(id))
-        a.reparentTo(pnode)
+	lines = LineSegs()
+	lines.setColor(ccolor)
+	lines.moveTo(can_coordinates[0][0],can_coordinates[0][1],can_coordinates[0][2])
+	for i in range(len(can_atoms))[1:]:
+		lines.drawTo(can_coordinates[i][0],can_coordinates[i][1],can_coordinates[i][2])
+	lines.setThickness(6)
+	lnode = lines.create()
+	linenp = NodePath(lnode)
+	linenp.reparentTo(pnode)
 
 pnode.flattenStrong()
 

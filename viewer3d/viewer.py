@@ -7,11 +7,11 @@ from panda3d.core import LineSegs
 
 from Bio.PDB import *
 
-import dict
+from molecular_data import colorrgba, vrad
 
 import numpy as np
 
-class panda3d(ShowBase):
+class Viewer3D(ShowBase):
 
 	modes={'CPK':'load_CPK', 'backbone':'load_bbone'}
 
@@ -23,8 +23,8 @@ class panda3d(ShowBase):
 
 		#Desglosamos archivo PDB
 		parser = PDBParser(QUIET=True,PERMISSIVE=True)
-		structure = parser.get_structure('Structure', pdb_file)	
-	
+		structure = parser.get_structure('Structure', pdb_file)
+
 		#Creamos el modelo
 		self.pnode = render.attachNewNode("Model")
 		if mode == 'CPK':
@@ -38,23 +38,23 @@ class panda3d(ShowBase):
 		self.pnode.setPos(0,0,0)
 
 		#Colocamos la camara en el centro
-				
+
 		p_radius= self.pnode.getBounds().getRadius()
-		p_center= self.pnode.getBounds().getCenter()		
+		p_center= self.pnode.getBounds().getCenter()
 		xc,yc,zc = p_center
-		
+
 		base.cam.setPos(xc,-150-yc-2*p_radius,zc)
 		base.cam.lookAt(xc,yc,zc)
 
 		#Luz ambiental
-		
+
 		self.ambiente = AmbientLight('aluz')
 		self.ambiente.setColor(LVecBase4f(0.16, 0.16, 0.17, 1.0))
 		self.luza = render.attachNewNode(ambiente)
 		render.setLight(self.luza)
 
 		#Luz direccional
-		
+
 		self.direccional = DirectionalLight('dluz')
 		self.direccional.setColor(LVecBase4f(0.8,0.7,0.75,1.0))
 		self.direccional.setShadowCaster(True,512,512)
@@ -69,10 +69,10 @@ class panda3d(ShowBase):
 		for atom in structure.get_atoms():
 			x,y,z=atom.coord
 			id=atom.get_id()
-			a = loader.loadModel("atom_sphere")
+			a = loader.loadModel("data/atom_sphere")
 			a.setPos(x, y, z)
-			a.setColor(dict.colorrgba(id))
-			a.setScale(dict.vrad(id))
+			a.setColor(colorrgba(id))
+			a.setScale(vrad(id))
 			a.reparentTo(node)
 
 		node.flattenStrong()
@@ -87,11 +87,11 @@ class panda3d(ShowBase):
 			for atom in can_atoms:
 				x,y,z = atom.coord
 				id=atom.get_id()
-				a = loader.loadModel("atom_sphere")
+				a = loader.loadModel("data/atom_sphere")
 				a.setPos(x,y,z)
 				a.reparentTo(pnode)
 				a.setColor(ccolor)
-				a.setScale(dict.vrad(id)/2.5)
+				a.setScale(vrad(id)/2.5)
 
 			lines = LineSegs()
 			lines.setColor(ccolor)
