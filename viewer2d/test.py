@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 #Desglosamos archivo PDB
 parser = PDBParser(QUIET=True,PERMISSIVE=True)
-structure = parser.get_structure('MACROH2A', '1yd9.pdb')
+structure = parser.get_structure('MACROH2A', 'data/1yd9.pdb')
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
