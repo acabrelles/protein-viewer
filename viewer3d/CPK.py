@@ -40,7 +40,7 @@ p_radius= pnode.getBounds().getRadius()
 p_center= pnode.getBounds().getCenter()
 xc, yc, zc = p_center
 
-base.cam.setPos(xc, -150-yc-2*p_radius, zc)
+base.cam.setPos(xc, -10-yc-4*p_radius, zc)
 base.cam.lookAt(xc, yc, zc)
 
 #Creamos iluminacion del ambiente (para la sombra)
