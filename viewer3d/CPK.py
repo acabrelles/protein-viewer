@@ -21,13 +21,13 @@ structure = parser.get_structure('MACROH2A', 'data/1yd9.pdb')
 pnode = render.attachNewNode("Model")
 
 for atom in structure.get_atoms():
-	x, y, z = atom.coord
-	id = atom.get_id()
-	a = loader.loadModel("data/atom_sphere")
-	a.setPos(x, y, z)
-	a.reparentTo(pnode)
-	a.setColor(colorrgba(id))
-	a.setScale(vrad(id))
+    x, y, z = atom.coord
+    id = atom.get_id()
+    a = loader.loadModel("data/atom_sphere")
+    a.setPos(x, y, z)
+    a.reparentTo(pnode)
+    a.setColor(colorrgba(id))
+    a.setScale(vrad(id))
 
 pnode.flattenStrong()
 

@@ -20,6 +20,7 @@ for chain in structure.get_chains():
         x,y,z=zip(*can_coordinates)
         ccolor = np.random.rand(3,1)
         ax.plot(x, y, z, c=ccolor, linewidth=2)
+        ax.scatter(x, y, z, c=ccolor, marker='o')
         ax.axis("off")
         
 plt.show()

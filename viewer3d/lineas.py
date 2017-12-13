@@ -24,28 +24,28 @@ structure = parser.get_structure('MACROH2A', 'data/1yd9.pdb')
 pnode = render.attachNewNode("Model")
 
 for chain in structure.get_chains():
-	carr = np.random.rand(3,1)
-	ccolor = float(carr[0]),float(carr[1]),float(carr[2]),1.0
-	can_atoms = [atom for atom in chain.get_atoms() if atom.get_name() == 'CA' or atom.get_name() == 'N']
-	can_coordinates = [atom.coord for atom in can_atoms]
-	for atom in can_atoms:
-		x,y,z = atom.coord
-		id=atom.get_id()
-		a = loader.loadModel("data/atom_sphere")
-		a.setPos(x,y,z)
-		a.reparentTo(pnode)
-		a.setColor(ccolor)
-		a.setScale(vrad(id)/2.5)
+    carr = np.random.rand(3,1)
+    ccolor = float(carr[0]),float(carr[1]),float(carr[2]),1.0
+    can_atoms = [atom for atom in chain.get_atoms() if atom.get_name() == 'CA' or atom.get_name() == 'N']
+    can_coordinates = [atom.coord for atom in can_atoms]
+    for atom in can_atoms:
+        x,y,z = atom.coord
+        id=atom.get_id()
+        a = loader.loadModel("data/atom_sphere")
+        a.setPos(x,y,z)
+        a.reparentTo(pnode)
+        a.setColor(ccolor)
+        a.setScale(vrad(id)/2.5)
 
-	lines = LineSegs()
-	lines.setColor(ccolor)
-	lines.moveTo(can_coordinates[0][0],can_coordinates[0][1],can_coordinates[0][2])
-	for i in range(len(can_atoms))[1:]:
-		lines.drawTo(can_coordinates[i][0],can_coordinates[i][1],can_coordinates[i][2])
-	lines.setThickness(6)
-	lnode = lines.create()
-	linenp = NodePath(lnode)
-	linenp.reparentTo(pnode)
+    lines = LineSegs()
+    lines.setColor(ccolor)
+    lines.moveTo(can_coordinates[0][0],can_coordinates[0][1],can_coordinates[0][2])
+    for i in range(len(can_atoms))[1:]:
+        lines.drawTo(can_coordinates[i][0],can_coordinates[i][1],can_coordinates[i][2])
+    lines.setThickness(6)
+    lnode = lines.create()
+    linenp = NodePath(lnode)
+    linenp.reparentTo(pnode)
 
 pnode.flattenStrong()
 
@@ -54,13 +54,12 @@ pnode.flattenStrong()
 pnode.setPos(0,0,0)
 
 #Colocamos la camara en el centro
-
 p_radius= pnode.getBounds().getRadius()
 p_center= pnode.getBounds().getCenter()
-xc,yc,zc = p_center
+xc, yc, zc = p_center
 
-base.cam.setPos(xc,-150-yc-2*p_radius,zc)
-base.cam.lookAt(xc,yc,zc)
+base.cam.setPos(xc, -10-yc-4*p_radius, zc)
+base.cam.lookAt(xc, yc, zc)
 
 #Creamos iluminacion del ambiente (para la sombra)
 

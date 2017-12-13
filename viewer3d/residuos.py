@@ -23,32 +23,32 @@ pnode = render.attachNewNode("Model")
 #Listado de residuos, solo contando los aminoacidos
 residues = [residue for residue in structure.get_residues() if residue.get_resname() in resdict.keys()]
 for residue in residues:
-	resid = residue.get_resname()
-	color = colorrgba(restype(resid))
-	atoms = [atom for atom in residue.get_atoms()]
-	for atom in atoms:
-		x, y, z=atom.coord
-        	atomid=atom.get_id()
-        	a = loader.loadModel("data/atom_sphere")
-        	a.setPos(x, y, z)
-        	a.setColor(color)
-        	a.setScale(vrad(atomid))
-        	a.reparentTo(pnode)
+    resid = residue.get_resname()
+    color = colorrgba(restype(resid))
+    atoms = [atom for atom in residue.get_atoms()]
+    for atom in atoms:
+        x, y, z=atom.coord
+        atomid=atom.get_id()
+        a = loader.loadModel("data/atom_sphere")
+        a.setPos(x, y, z)
+        a.setColor(color)
+        a.setScale(vrad(atomid))
+        a.reparentTo(pnode)
 
 pnode.flattenStrong
 
 #Seleccionamos el resto de 'residuos' que ha determinado el parser, sin incluir aguas
 residues2 = [residue for residue in structure.get_residues() if not residue in residues and residue.get_resname() != 'HOH']
 for residue in residues2:
-	atoms = [atom for atom in residue.get_atoms()]
-	for atom in atoms:
-        	x,y,z=atom.coord
-        	atomid=atom.get_id()
-        	a = loader.loadModel("data/atom_sphere")
-        	a.setPos(x, y, z)
-        	a.setColor(colorrgba(atomid))
-        	a.setScale(vrad(atomid))
-        	a.reparentTo(pnode)
+    atoms = [atom for atom in residue.get_atoms()]
+    for atom in atoms:
+        x, y, z=atom.coord
+        atomid=atom.get_id()
+        a = loader.loadModel("data/atom_sphere")
+        a.setPos(x, y, z)
+        a.setColor(colorrgba(atomid))
+        a.setScale(vrad(atomid))
+        a.reparentTo(pnode)
 
 pnode.flattenStrong()
 
@@ -57,13 +57,12 @@ pnode.flattenStrong()
 pnode.setPos(0,0,0)
 
 #Colocamos la camara en el centro
-
 p_radius= pnode.getBounds().getRadius()
 p_center= pnode.getBounds().getCenter()
-xc,yc,zc = p_center
+xc, yc, zc = p_center
 
-base.cam.setPos(xc,-150-yc-2*p_radius,zc)
-base.cam.lookAt(xc,yc,zc)
+base.cam.setPos(xc, -10-yc-4*p_radius, zc)
+base.cam.lookAt(xc, yc, zc)
 
 #Creamos iluminacion del ambiente (para la sombra)
 
