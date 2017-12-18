@@ -8,13 +8,14 @@ The libraries are:
 · Mathematical library, matplotlib
 
 · Videogame engine library, Panda3D
-##matplotlib
+
+MATPLOTLIB
 
 Execute the command python matviewer.py data/1yd9.pdb <mode>
 
 4 possible modes: cpk, aminoacid, backbone and dssp
 
-##Panda3D:
+PANDA3D
 
 Execute the command python pandaviewer.py data/1yd9.pdb for the example
 
