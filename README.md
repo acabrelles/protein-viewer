@@ -11,7 +11,7 @@ The libraries are:
 
 MATPLOTLIB
 
-Execute the command python matviewer.py data/1yd9.pdb <mode>
+Execute the command python matviewer.py data/1yd9.pdb "mode"
 
 4 possible modes: cpk, aminoacid, backbone and dssp
 
