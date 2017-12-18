@@ -11,11 +11,7 @@ The libraries are:
 
 MATPLOTLIB
 
-<<<<<<< HEAD
-Execute the command python matviewer.py data/1yd9.pdb
-=======
 Execute the command python matviewer.py data/1yd9.pdb <mode>
->>>>>>> 60ebd5d2f3711359acc5bd85af3555bdd8caeb9a
 
 4 possible modes: cpk, aminoacid, backbone and dssp
 
@@ -41,12 +37,10 @@ Up arrow key: Vertical rotation
 
 Down arrow key: Stop rotation
 
-<<<<<<< HEAD
-(Camera is a bit wonky) Left click for panning
-=======
+
 (Camera is a bit wonky)
+
 Left click for panning
->>>>>>> 60ebd5d2f3711359acc5bd85af3555bdd8caeb9a
 
 Middle click for rotation 1
 
