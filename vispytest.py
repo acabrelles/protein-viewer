@@ -1,4 +1,4 @@
-from Bio.PDB import PDBParser,DSSP
+from Bio.PDB import PDBParser
 
 from vispy import gloo, app, visuals
 
@@ -6,7 +6,7 @@ from vispy.util.transforms import perspective, translate
 
 import numpy as np
 
-from molecular_data import crgbaDSSP, restype, colorrgba, vrad, resdict
+from molecular_data import restype, colorrgba, vrad, resdict
 
 W,H = 1200, 800
 
@@ -54,7 +54,7 @@ def centroid(arr):
 
 class Canvas(app.Canvas):
     
-    visualization_modes = ['cpk','backbone','aminoacid','dssp']
+    visualization_modes = ['cpk','backbone','aminoacid']
     
     def __init__(self, pdbdata, mode='cpk'):
         
@@ -67,10 +67,6 @@ class Canvas(app.Canvas):
         #Analyze pdb file
         self.parser = PDBParser(QUIET=True, PERMISSIVE=True)
         self.structure = self.parser.get_structure('model',pdbdata)
-        
-        #DSSP prediction
-        self.model = self.structure[0]
-        self.dssp = DSSP(self.model, pdbdata)
         
         #Mode selection
         if mode not in Canvas.visualization_modes:
@@ -108,7 +104,7 @@ class Canvas(app.Canvas):
             #atom color
             self.color = [colorrgba(atom.get_id()) for atom in self.atoms]
             #atom radius
-            self.radius = [vrad(atom.get_id() for atom in self.atoms)]
+            self.radius = [vrad(atom.get_id()) for atom in self.atoms]
             
         elif self.mode == 'aminoacid':
             #list of atoms
@@ -121,7 +117,7 @@ class Canvas(app.Canvas):
             #atom color
             self.color = [colorrgba(restype(atom.get_parent().resname)) for atom in self.atoms]
             #atom radius
-            self.radius = [vrad(atom.get_id() for atom in self.atoms)]
+            self.radius = [vrad(atom.get_id()) for atom in self.atoms]
             
         elif self.mode == 'backbone':
             #list of atoms
@@ -142,28 +138,7 @@ class Canvas(app.Canvas):
             if len(self.chains)>1:
                 self.color = np.concatenate(self.color)
             #atom radius
-            self.radius = [vrad(atom.get_id() for atom in self.atoms)]
-                
-        elif self.mode == 'dssp':
-            #list of atoms
-            self.atoms = [atom for atom in self.structure.get_atoms() if atom.get_name() == 'CA' or atom.get_name() == 'N']
-            self.natoms = len(self.atoms)
-            #atom coordinates
-            self.coordinates = np.array([atom.coord for atom in self.atoms])
-            self.center = centroid(self.coordinates)
-            self.coordinates -= self.center
-            #atom color
-            self.struct3 = [self.dssp[key][2] for key in list(self.dssp.keys())]
-            self.residues = [residue for residue in self.structure.get_residues() if residue.get_resname() in resdict.keys()]
-            self.color = []
-            for i in range(len(self.struct3)):
-                self.dsspcolor = crgbaDSSP(self.struct3[i])
-                self.natoms = len([atom for atom in self.residues[i] if atom.get_name() =='CA' or atom.get_name() == 'N'])
-                self.color.append(np.tile(self.dsspcolor,(self.natoms,1)))
-            if len(self.struct3)>1:
-                self.color = np.concatenate(self.color)
-            #atom radius
-            self.radius = [vrad(atom.get_id() for atom in self.atoms)]
+            self.radius = [vrad(atom.get_id()) for atom in self.atoms]
             
     def load_data(self):
         
