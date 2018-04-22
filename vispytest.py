@@ -23,7 +23,7 @@ attribute float a_radius;
 
 varying vec4 v_color;
 varying float v_radius;
-varying v_eye_position;
+varying vec4 v_eye_position;
 
 void main (void) {
     v_radius = a_radius;
@@ -32,7 +32,7 @@ void main (void) {
     v_eye_position = u_view * u_model * vec4(a_position,1.0);
     
     gl_Position = u_projection * v_eye_position;
-    gl_PointSize = v_radius
+    gl_PointSize = v_radius;
 }
 
 """
@@ -86,6 +86,7 @@ class Canvas(app.Canvas):
         #Load data depending on the mdoe
         self.atom_information()
         self.load_data()
+        self.show()
         
         
         
@@ -150,9 +151,11 @@ class Canvas(app.Canvas):
 
         data['a_position'] = self.coordinates
         data['a_color'] = self.color
-        data['a_radius'] = self.radius*self.pixel_scale
+        data['a_radius'] = self.radius #*self.pixel_scale
 
         self.program.bind(gloo.VertexBuffer(data))
+        print 'Data loaded'
+
     
     def on_resize(self, event):
         gloo.set_viewport(0, 0, event.physical_size[0], event.physical_size[1])
