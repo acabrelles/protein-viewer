@@ -30,7 +30,8 @@ void main (void) {
     v_light_direction = normalize(u_light_position);
     float dist = length(v_eye_position.xyz);
 
-    gl_Position = $transform(u_projection * v_eye_position);
+    //gl_Position = $transform(u_projection * v_eye_position);
+    gl_Position = $transform(vec4(a_position, 1));
 
     vec4  proj_corner = u_projection * vec4(a_radius, a_radius, v_eye_position.z, v_eye_position.w);  // # noqa
     gl_PointSize = 512.0 * proj_corner.x / proj_corner.w;
@@ -87,7 +88,7 @@ class MySpheresVisual(visuals.Visual):
     
     Parameters
     ----------
-    position: array of coordinates
+    coordinates: array of coordinates
     color: array of colors
     radius: array of radius
     W: width of canvas
@@ -123,7 +124,7 @@ class MySpheresVisual(visuals.Visual):
 
         data['a_position'] = coordinates
         data['a_color'] = color
-        data['a_radius'] = radius #*self.pixel_scale
+        data['a_radius'] = radius#*view.transforms.pixel_scale
 
         self.shared_program.bind(gloo.VertexBuffer(data))
         
