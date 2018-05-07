@@ -1,5 +1,6 @@
 from vispy import app,visuals,scene
 from vispy.visuals.transforms import STTransform
+from vispy.scene import ArcballCamera
 
 import numpy as np
 
@@ -27,7 +28,7 @@ coordinates -= center
 #atom color
 color = [colorrgba(atom.get_id()) for atom in atoms]
 #atom radius
-radius = [vrad(atom.get_id()) for atom in atoms]
+radius = [10*vrad(atom.get_id()) for atom in atoms]
 
 W,H = 1200, 800
 
@@ -37,8 +38,8 @@ canvas = scene.SceneCanvas(keys='interactive', app='pyqt4', bgcolor='white', tit
                            size=(W,H), show=True)
 
 view = canvas.central_widget.add_view()
-view.camera = 'turntable'
+view.camera = ArcballCamera(fov=20, distance=300)
 
-Plot3D(coordinates, width=0.0, color='red', edge_color='b', symbol='o', face_color=(0.2, 0.2, 1, 1.0),parent=view.scene)
+Plot3D(coordinates, marker_size=radius, width=0.0, color='red', edge_color='b', symbol='o', face_color=color, parent=view.scene)
 
 canvas.app.run()

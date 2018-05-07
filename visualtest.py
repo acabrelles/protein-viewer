@@ -133,3 +133,5 @@ view = canvas.central_widget.add_view()
 view.camera = 'arcball'
 
 spheres = [MySpheres(coordinates[0],color[0],radius[0],W,H, parent=view.scene)]
+
+canvas.app.run()

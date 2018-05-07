@@ -1,5 +1,7 @@
 from vispy import app, gloo, visuals, scene
 
+from vispy.scene import ArcballCamera
+
 from vispy.util.transforms import perspective, translate
 
 import numpy as np
@@ -31,7 +33,7 @@ void main (void) {
     float dist = length(v_eye_position.xyz);
 
     //gl_Position = $transform(u_projection * v_eye_position);
-    gl_Position = $transform(vec4(a_position, 1));
+    gl_Position = $transform(u_projection * vec4(a_position, 1));
 
     vec4  proj_corner = u_projection * vec4(a_radius, a_radius, v_eye_position.z, v_eye_position.w);  // # noqa
     gl_PointSize = 512.0 * proj_corner.x / proj_corner.w;
@@ -169,7 +171,7 @@ canvas = scene.SceneCanvas(keys='interactive', app='pyqt4', bgcolor='white',
 
 view = canvas.central_widget.add_view()
 
-view.camera = 'arcball'
+view.camera = ArcballCamera(fov=50, distance=200)
 
 spheres = [MySpheres(coordinates,color,radius,W,H,parent=view.scene)]
 
