@@ -1,8 +1,8 @@
-from Bio.PDB import PDBParser,DSSP
+from Bio.PDB import PDBParser
 
 from vispy import gloo, app, visuals
 
-from vispy.util.transforms import perspective, translate
+from vispy.util.transforms import perspective, translate, rotate
 
 import numpy as np
 
@@ -10,7 +10,7 @@ from molecular_data import crgbaDSSP, restype, colorrgba, vrad, resdict
 
 W,H = 1200, 800
 
-vertex= """
+vertex = """
 #version 120
 
 uniform mat4 u_model;
@@ -29,22 +29,23 @@ varying float v_radius;
 varying vec3  v_light_direction;
 
 void main (void) {
-
     v_radius = a_radius;
     v_color = a_color;
-    v_eye_position = u_view * u_model * vec4(a_position,1.0);
 
+    v_eye_position = u_view * u_model * vec4(a_position,1.0);
     v_light_direction = normalize(u_light_position);
     float dist = length(v_eye_position.xyz);
+
     gl_Position = u_projection * v_eye_position;
 
     vec4  proj_corner = u_projection * vec4(a_radius, a_radius, v_eye_position.z, v_eye_position.w);  // # noqa
-    gl_PointSize = 600.0 * proj_corner.x / proj_corner.w;
+    gl_PointSize = 512.0 * proj_corner.x / proj_corner.w;
 }
-
 """
-fragment= """
+
+fragment = """
 #version 120
+
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_projection;
@@ -55,11 +56,8 @@ varying vec3  v_color;
 varying vec4  v_eye_position;
 varying float v_radius;
 varying vec3  v_light_direction;
-
 void main()
 {
-    //Make the vertex into circles (it discards pixels out of radius)
-    // r^2 = (x - x0)^2 + (y - y0)^2 + (z - z0)^2
     vec2 texcoord = gl_PointCoord* 2.0 - vec2(1.0);
     float x = texcoord.x;
     float y = texcoord.y;
@@ -72,7 +70,7 @@ void main()
     pos.z += v_radius*z;
     vec3 pos2 = pos.xyz;
     pos = u_projection * pos;
-//    gl_FragDepth = 0.5*(pos.z / pos.w)+0.5;
+    // gl_FragDepth = 0.5*(pos.z / pos.w)+0.5;
     vec3 normal = vec3(x,y,z);
     float diffuse = clamp(dot(normal, v_light_direction), 0.0, 1.0);
 
@@ -120,22 +118,23 @@ class Canvas(app.Canvas):
         self.mode = mode
         
         #Camera settings
-        self.translate = 120
+        self.translate = 50
         self.view = translate((0,0, -self.translate), dtype=np.float32)
         self.model = np.eye(4, dtype=np.float32)
-        self.projection = perspective(45.0, self.size[0] / float(self.size[1]), 1.0, 1000.0)
-        
-        self.program['u_model'] = self.model
-        self.program['u_view'] = self.view
+        self.projection = np.eye(4, dtype=np.float32)
+
         self.program['u_projection'] = self.projection
         
+        self.theta = 0
+        self.phi = 0
+
         #Load data depending on the mdoe
+
+        self.apply_zoom()
         self.atom_information()
         self.load_data()
         self.show()
-        
-        
-        
+
     def atom_information(self):
         
         """Determines the coordinates, colors and sizes of the atoms depending on the mode"""
@@ -201,21 +200,44 @@ class Canvas(app.Canvas):
 
         self.program.bind(gloo.VertexBuffer(data))
 
+        self.program['u_model'] = self.model
+        self.program['u_view'] = self.view
         self.program['u_light_position'] = 0., 0., 2.
         self.program['u_light_spec_position'] = -5., 5., -5.
 
         print 'Data loaded'
-
     
     def on_resize(self, event):
-        gloo.set_viewport(0, 0, event.physical_size[0], event.physical_size[1])
-        self.projection = perspective(45.0, event.size[0] / float(event.size[1]), 1.0, 1000.0)
+        width, height = event.size
+
+    def apply_zoom(self):
+        width, height = self.physical_size
+        gloo.set_viewport(0, 0, width, height)
+        self.projection = perspective(95.0, width / float(height), 1.0, 400.0)
         self.program['u_projection'] = self.projection
     
     def on_draw(self,event):
         gloo.clear()
         self.program.draw('points')
 
+    def rotate_molecule(self):
+        self.model = np.dot(rotate(self.theta, (0, 0, 1)),
+                            rotate(self.phi, (0, 1, 0)))
+        self.program['u_model'] = self.model
+        self.update()
+
+    def on_mouse_move(self,event):
+        if event.button == 1 and event.last_event is not None:
+            x0, y0 = event.last_event.pos
+            x1, y1 = event.pos
+            xdist = x1 - x0
+            ydist = y1 - y0
+            self.phi += xdist
+            self.rotate_molecule()
+            self.theta += ydist
+            self.rotate_molecule()
+
+
 pdbdata = 'data/1yd9.pdb'
-mvc = Canvas(pdbdata, mode='backbone')
+mvc = Canvas(pdbdata, mode='cpk')
 app.run()

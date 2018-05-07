@@ -122,7 +122,7 @@ class Canvas(app.Canvas):
         self.mode = mode
         
         #Camera settings
-        self.translate = 100
+        self.translate = 50
         self.view = translate((0,0, -self.translate), dtype=np.float32)
         self.model = np.eye(4, dtype=np.float32)
         self.projection = np.eye(4, dtype=np.float32)
@@ -240,14 +240,12 @@ class Canvas(app.Canvas):
     def apply_zoom(self):
         width, height = self.physical_size
         gloo.set_viewport(0, 0, width, height)
-
-        self.projection = perspective(50.0, width / float(height), 1.0, 1000.0)
+        self.projection = perspective(95.0, width / float(height), 1.0, 400.0)
         self.program['u_projection'] = self.projection
     
     def on_draw(self,event):
         gloo.clear()
         self.program.draw('points')
-
 
     def rotate_molecule(self):
         self.model = np.dot(rotate(self.theta, (0, 0, 1)),
