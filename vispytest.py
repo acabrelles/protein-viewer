@@ -4,9 +4,12 @@ from vispy import gloo, app, visuals
 
 from vispy.util.transforms import perspective, translate, rotate
 
+
 import numpy as np
 
 from molecular_data import crgbaDSSP, restype, colorrgba, vrad, resdict
+from vispy.util.quaternion import Quaternion
+
 
 W,H = 1200, 800
 
@@ -96,9 +99,24 @@ def centroid(arr):
     sum_z = np.sum(arr[:, 2])
     return sum_x/length, sum_y/length, sum_z/length
 
+#Function to convert x,y coordinates to Quaternion for camera
+def _arcball(x, y, w, h):
+        """Convert x,y coordinates to w,x,y,z Quaternion parameters
+        Adapted from:
+        linalg library
+        Copyright (c) 2010-2015, Renaud Blanch <rndblnch at gmail dot com>
+        Licence at your convenience:
+        GPLv3 or higher <http://www.gnu.org/licenses/gpl.html>
+        BSD new <http://opensource.org/licenses/BSD-3-Clause>
+        """
+        r = (w + h) / 2.
+        x, y = -(2. * x - w) / r, -(2. * y - h) / r
+        h = np.sqrt(x*x + y*y)
+        return (0., -x/h, y/h, 0.) if h > 1. else (0., -x, y, np.sqrt(1. - h*h))
+
 class Canvas(app.Canvas):
     
-    visualization_modes = ['cpk','backbone','aminoacid']
+    visualization_modes = ['cpk','backbone','aminoacid', 'dssp']
     
     def __init__(self, pdbdata, mode='cpk'):
         
@@ -111,7 +129,7 @@ class Canvas(app.Canvas):
         #Analyze pdb file
         self.parser = PDBParser(QUIET=True, PERMISSIVE=True)
         self.structure = self.parser.get_structure('model',pdbdata)
-        
+
         #Mode selection
         if mode not in Canvas.visualization_modes:
             raise Exception('Not recognized visualization mode %s' % mode)
@@ -119,14 +137,14 @@ class Canvas(app.Canvas):
         
         #Camera settings
         self.translate = 50
+        self.translate = max(-1, self.translate)
         self.view = translate((0,0, -self.translate), dtype=np.float32)
+
         self.model = np.eye(4, dtype=np.float32)
         self.projection = np.eye(4, dtype=np.float32)
-
         self.program['u_projection'] = self.projection
         
-        self.theta = 0
-        self.phi = 0
+        self.quaternion = Quaternion()
 
         #Load data depending on the mdoe
 
@@ -148,7 +166,7 @@ class Canvas(app.Canvas):
             self.center = centroid(self.coordinates)
             self.coordinates -= self.center
             #atom color
-            self.color = [colorrgba(atom.get_id()) for atom in self.atoms]
+            self.color = [np.array(colorrgba(atom.get_id())[0:3]) for atom in self.atoms]
             #atom radius
             self.radius = [vrad(atom.get_id()) for atom in self.atoms]
             
@@ -161,7 +179,7 @@ class Canvas(app.Canvas):
             self.center = centroid(self.coordinates)
             self.coordinates -= self.center
             #atom color
-            self.color = [colorrgba(restype(atom.get_parent().resname)) for atom in self.atoms]
+            self.color = [colorrgba(restype(atom.get_parent().resname))[0:3] for atom in self.atoms]
             #atom radius
             self.radius = [vrad(atom.get_id()) for atom in self.atoms]
             
@@ -179,19 +197,19 @@ class Canvas(app.Canvas):
             for chain in self.structure.get_chains():
                 self.chains.append(chain)
                 self.chain_length = len([atom for atom in chain.get_atoms() if atom.get_name() =='CA' or atom.get_name() =='N'])
-                self.chain_color = np.append(np.random.rand(1,3),[1.0])
+                self.chain_color = np.random.rand(1,3)
                 self.color.append(np.tile(self.chain_color,(self.chain_length,1)))
             if len(self.chains)>1:
                 self.color = np.concatenate(self.color)
             #atom radius
             self.radius = [vrad(atom.get_id()) for atom in self.atoms]
-            
+
     def load_data(self):
         
         """Make an array with all the data and load it into VisPy Gloo"""
         
         data = np.zeros(self.natoms, [('a_position', np.float32, 3),
-                            ('a_color', np.float32, 4),
+                            ('a_color', np.float32, 3),
                             ('a_radius', np.float32, 1)])
 
         data['a_position'] = self.coordinates
@@ -220,22 +238,25 @@ class Canvas(app.Canvas):
         gloo.clear()
         self.program.draw('points')
 
-    def rotate_molecule(self):
-        self.model = np.dot(rotate(self.theta, (0, 0, 1)),
-                            rotate(self.phi, (0, 1, 0)))
-        self.program['u_model'] = self.model
-        self.update()
-
     def on_mouse_move(self,event):
         if event.button == 1 and event.last_event is not None:
             x0, y0 = event.last_event.pos
             x1, y1 = event.pos
-            xdist = x1 - x0
-            ydist = y1 - y0
-            self.phi += xdist
-            self.rotate_molecule()
-            self.theta += ydist
-            self.rotate_molecule()
+            w, h = self.size
+            self.quaternion = (self.quaternion *
+                               Quaternion(*_arcball(x0, y0, w, h)) *
+                               Quaternion(*_arcball(x1, y1, w, h)))
+            self.model = self.quaternion.get_matrix()
+            self.program['u_model'] = self.model
+            self.update()
+        elif event.button == 2 and event.last_event is not None:
+            x0, y0 = event.last_event.pos
+            x1, y1 = event.pos
+            self.translate += (y1-y0)
+            self.translate = max(-1, self.translate)
+            self.view = translate((0,0, -self.translate), dtype=np.float32)
+            self.program['u_view'] = self.view
+            self.update()
 
 
 pdbdata = 'data/1yd9.pdb'
