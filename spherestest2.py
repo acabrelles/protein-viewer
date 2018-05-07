@@ -102,7 +102,7 @@ class MySpheresVisual(visuals.Visual):
         self.size = W,H
         #Camera settings
         self.translate = 120
-        self.view = translate((0,0, -self.translate), dtype=np.float32)
+        self.view = translate((0,-self.translate, -self.translate), dtype=np.float32)
         self.model = np.eye(4, dtype=np.float32)
         self.projection = np.eye(4, dtype=np.float32)
         
