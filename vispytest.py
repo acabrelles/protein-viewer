@@ -109,6 +109,10 @@ def _arcball(x, y, w, h):
         GPLv3 or higher <http://www.gnu.org/licenses/gpl.html>
         BSD new <http://opensource.org/licenses/BSD-3-Clause>
         """
+        x = float(x)
+        y = float(y)
+        w = float(w)
+        h = float(h)
         r = (w + h) / 2.
         x, y = -(2. * x - w) / r, -(2. * y - h) / r
         h = np.sqrt(x*x + y*y)
@@ -136,7 +140,7 @@ class Canvas(app.Canvas):
         self.mode = mode
         
         #Camera settings
-        self.translate = 50
+        self.translate = 100
         self.translate = max(-1, self.translate)
         self.view = translate((0,0, -self.translate), dtype=np.float32)
 
@@ -151,6 +155,9 @@ class Canvas(app.Canvas):
         self.apply_zoom()
         self.atom_information()
         self.load_data()
+
+        gloo.set_state(depth_test=True, clear_color='black')
+
         self.show()
 
     def atom_information(self):
@@ -260,5 +267,5 @@ class Canvas(app.Canvas):
 
 
 pdbdata = 'data/1yd9.pdb'
-mvc = Canvas(pdbdata, mode='cpk')
+mvc = Canvas(pdbdata, mode='aminoacid')
 app.run()
