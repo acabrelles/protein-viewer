@@ -19,16 +19,33 @@ def centroid(arr):
     sum_z = np.sum(arr[:, 2])
     return sum_x/length, sum_y/length, sum_z/length
 
-atoms = [atom for atom in structure.get_atoms()]
+#list of atoms
+atoms = [atom for atom in structure.get_atoms() if atom.get_name() == 'CA' or atom.get_name() == 'N']
 natoms = len(atoms)
 #atom coordinates
 coordinates = np.array([atom.coord for atom in atoms])
 center = centroid(coordinates)
 coordinates -= center
 #atom color
-color = [colorrgba(atom.get_id()) for atom in atoms]
+color = []
+chains = []
+chain_coords = []
+chain_colors = []
+chain_radius = []
+for chain in structure.get_chains():
+    chains.append(chain)
+    can_coord = np.array([atom.coord for atom in chain.get_atoms() if atom.get_name() =='CA' or atom.get_name() =='N'])
+    can_coord -= center
+    chain_coords.append(can_coord)
+    chain_length = len(can_coord)
+    chain_color = np.random.rand(1,3)
+    chain_colors.append(chain_color)
+    color.append(np.tile(chain_color,(chain_length,1)))
+    chain_radius.append([vrad(atom.get_id()) for atom in chain.get_atoms() if atom.get_name() =='CA' or atom.get_name() =='N']) 
+if len(chains)>1:
+    color = np.concatenate(color)
 #atom radius
-radius = [10*vrad(atom.get_id()) for atom in atoms]
+radius = [vrad(atom.get_id()) for atom in atoms]
 
 W,H = 1200, 800
 
@@ -38,8 +55,8 @@ canvas = scene.SceneCanvas(keys='interactive', app='pyqt4', bgcolor='white', tit
                            size=(W,H), show=True)
 
 view = canvas.central_widget.add_view()
-view.camera = ArcballCamera(fov=20, distance=300)
-
-Plot3D(coordinates, marker_size=radius, width=0.0, color='red', edge_color='b', symbol='o', face_color=color, parent=view.scene)
+view.camera = ArcballCamera(fov=95, distance=(max(abs(np.concatenate(coordinates))) + 40))
+for i in range(len(chains)):
+    Plot3D(chain_coords[i], marker_size=5, width=10.0, color=chain_colors[i], edge_color='b', symbol='o', face_color=chain_colors[i], parent=view.scene)
 
 canvas.app.run()

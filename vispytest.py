@@ -156,12 +156,12 @@ class Canvas(app.Canvas):
         
         self.quaternion = Quaternion()
 
-        #Load data depending on the mdoe
+        #Load data depending on the mode
 
         self.apply_zoom()
         self.load_data()
 
-        self.lines = visuals.LinePlotVisual(self.chain_coords[1], width= 5.0, marker_size= 0.0, color=self.chain_colors[1])
+        #self.lines = visuals.LinePlotVisual(self.chain_coords[1], width= 5.0, marker_size= 0.0, color=self.chain_colors[1])
 
         gloo.set_state(depth_test=True, clear_color='white')
 
@@ -260,7 +260,12 @@ class Canvas(app.Canvas):
     def on_draw(self,event):
         gloo.clear()       
         self.program.draw('points')
-        #self.lines.draw()
+        #draw separated chains
+        #if self.mode in ['backbone','dssp']:
+            #for i in range(len(self.chains)):
+                #self.lines = visuals.LinePlotVisual(self.chain_coords[i], width= 5.0, marker_size= 0.0, color=self.chain_colors[i])
+                #self.lines.draw()
+                
         
     def on_mouse_move(self,event):
         #Mouse rotation
