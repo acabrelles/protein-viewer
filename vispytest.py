@@ -101,6 +101,7 @@ def centroid(arr):
 
 #Function to convert x,y coordinates to Quaternion for camera
 def _arcball(x, y, w, h):
+
         """Convert x,y coordinates to w,x,y,z Quaternion parameters
         Adapted from:
         linalg library
@@ -109,6 +110,7 @@ def _arcball(x, y, w, h):
         GPLv3 or higher <http://www.gnu.org/licenses/gpl.html>
         BSD new <http://opensource.org/licenses/BSD-3-Clause>
         """
+
         x = float(x)
         y = float(y)
         w = float(w)
@@ -139,8 +141,12 @@ class Canvas(app.Canvas):
             raise Exception('Not recognized visualization mode %s' % mode)
         self.mode = mode
         
+        #Get the data of our atoms
+        self.atom_information()
+
         #Camera settings
-        self.translate = 100
+        
+        self.translate = max(abs(np.concatenate(self.coordinates))) + 40
         self.translate = max(-1, self.translate)
         self.view = translate((0,0, -self.translate), dtype=np.float32)
 
@@ -153,10 +159,11 @@ class Canvas(app.Canvas):
         #Load data depending on the mdoe
 
         self.apply_zoom()
-        self.atom_information()
         self.load_data()
 
-        gloo.set_state(depth_test=True, clear_color='black')
+        self.lines = visuals.LinePlotVisual(self.chain_coords[1], width= 5.0, marker_size= 0.0, color=self.chain_colors[1])
+
+        gloo.set_state(depth_test=True, clear_color='white')
 
         self.show()
 
@@ -201,10 +208,16 @@ class Canvas(app.Canvas):
             #atom color
             self.color = []
             self.chains = []
+            self.chain_coords = []
+            self.chain_colors = []
             for chain in self.structure.get_chains():
                 self.chains.append(chain)
-                self.chain_length = len([atom for atom in chain.get_atoms() if atom.get_name() =='CA' or atom.get_name() =='N'])
+                self.can_coord = np.array([atom.coord for atom in chain.get_atoms() if atom.get_name() =='CA' or atom.get_name() =='N'])
+                self.can_coord -= self.center
+                self.chain_coords.append(self.can_coord)
+                self.chain_length = len(self.can_coord)
                 self.chain_color = np.random.rand(1,3)
+                self.chain_colors.append(self.chain_color)
                 self.color.append(np.tile(self.chain_color,(self.chain_length,1)))
             if len(self.chains)>1:
                 self.color = np.concatenate(self.color)
@@ -236,16 +249,21 @@ class Canvas(app.Canvas):
         width, height = event.size
 
     def apply_zoom(self):
+
+        """Determine the projection of the canvas"""
+
         width, height = self.physical_size
         gloo.set_viewport(0, 0, width, height)
         self.projection = perspective(95.0, width / float(height), 1.0, 400.0)
         self.program['u_projection'] = self.projection
     
     def on_draw(self,event):
-        gloo.clear()
+        gloo.clear()       
         self.program.draw('points')
-
+        #self.lines.draw()
+        
     def on_mouse_move(self,event):
+        #Mouse rotation
         if event.button == 1 and event.last_event is not None:
             x0, y0 = event.last_event.pos
             x1, y1 = event.pos
@@ -256,6 +274,7 @@ class Canvas(app.Canvas):
             self.model = self.quaternion.get_matrix()
             self.program['u_model'] = self.model
             self.update()
+        #Mouse zoom
         elif event.button == 2 and event.last_event is not None:
             x0, y0 = event.last_event.pos
             x1, y1 = event.pos
@@ -265,7 +284,14 @@ class Canvas(app.Canvas):
             self.program['u_view'] = self.view
             self.update()
 
+    def on_mouse_wheel(self, event):
+        self.translate -= event.delta[1]
+        self.translate = max(-1, self.translate)
+        self.view = translate((0, 0, -self.translate))
+
+        self.program['u_view'] = self.view
+        self.update()
 
 pdbdata = 'data/1yd9.pdb'
-mvc = Canvas(pdbdata, mode='aminoacid')
+mvc = Canvas(pdbdata, mode='backbone')
 app.run()
