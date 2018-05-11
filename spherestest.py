@@ -1,17 +1,11 @@
+import numpy as np
 from vispy import app, gloo, visuals, scene
 
-from vispy.scene import ArcballCamera
 
-from vispy.util.transforms import perspective, translate
-
-import numpy as np
 
 vertex = """
 #version 120
 
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
 uniform vec3 u_light_position;
 uniform vec3 u_light_spec_position;
 
@@ -20,106 +14,111 @@ attribute vec3  a_color;
 attribute float a_radius;
 
 varying vec3  v_color;
-varying vec4  v_eye_position;
+varying vec4  v_eye_direction;
 varying float v_radius;
 varying vec3  v_light_direction;
 
+varying float v_depth;
+varying float v_depth_radius;
+
 void main (void) {
+    vec4 atom_pos = vec4(a_position, 1);
+    
+    // First decide where to draw this atom on screen
+    vec4 fb_pos = $visual_to_framebuffer(atom_pos);
+    gl_Position = $framebuffer_to_render(fb_pos);
+    
+    // Measure the orientation of the framebuffer coordinate system relative
+    // to the atom
+    vec4 x = $framebuffer_to_visual(fb_pos + vec4(100, 0, 0, 0));
+    x = (x/x.w - atom_pos) / 100;
+    vec4 z = $framebuffer_to_visual(fb_pos + vec4(0, 0, -100, 0));
+    z = (z/z.w - atom_pos) / 100;
+    
+    // Use the x axis to measure radius in framebuffer pixels
+    // (gl_PointSize uses the framebuffer coordinate system)
+    vec4 radius = $visual_to_framebuffer(atom_pos + normalize(x) * a_radius);
+    radius = radius/radius.w - fb_pos/fb_pos.w;
+    gl_PointSize = length(radius);
+    
+    // Use the z axis to measure position and radius in the depth buffer
+    v_depth = gl_Position.z / gl_Position.w;
+    // gl_FragDepth uses the "render" coordinate system.
+    vec4 depth_z = $framebuffer_to_render($visual_to_framebuffer(atom_pos + normalize(z) * a_radius));
+    v_depth_radius = v_depth - depth_z.z / depth_z.w;
+    
+    v_light_direction = normalize(u_light_position);
     v_radius = a_radius;
     v_color = a_color;
-
-    v_eye_position = u_view * u_model * vec4(a_position,1.0);
-    v_light_direction = normalize(u_light_position);
-    float dist = length(v_eye_position.xyz);
-
-    //gl_Position = $transform(u_projection * v_eye_position);
-    gl_Position = $transform(u_projection * vec4(a_position, 1));
-
-    vec4  proj_corner = u_projection * vec4(a_radius, a_radius, v_eye_position.z, v_eye_position.w);  // # noqa
-    gl_PointSize = 512.0 * proj_corner.x / proj_corner.w;
 }
 """
 
 fragment = """
 #version 120
 
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
-uniform vec3 u_light_position;
-uniform vec3 u_light_spec_position;
-
 varying vec3  v_color;
-varying vec4  v_eye_position;
 varying float v_radius;
 varying vec3  v_light_direction;
+varying float v_depth;
+varying float v_depth_radius;
+
 void main()
 {
-    vec2 texcoord = gl_PointCoord* 2.0 - vec2(1.0);
+    // calculate xyz position of this fragment relative to radius
+    vec2 texcoord = gl_PointCoord * 2.0 - vec2(1.0);
     float x = texcoord.x;
     float y = texcoord.y;
     float d = 1.0 - x*x - y*y;
     if (d <= 0.0)
         discard;
-
     float z = sqrt(d);
-    vec4 pos = v_eye_position;
-    pos.z += v_radius*z;
-    vec3 pos2 = pos.xyz;
-    pos = u_projection * pos;
-    // gl_FragDepth = 0.5*(pos.z / pos.w)+0.5;
     vec3 normal = vec3(x,y,z);
-    float diffuse = clamp(dot(normal, v_light_direction), 0.0, 1.0);
+    
+    // Diffuse color
+    float ambient = 0.3;
+    float diffuse = dot(v_light_direction, normal);
+    // clamp, because 0 < theta < pi/2
+    diffuse = clamp(diffuse, 0.0, 1.0);
+    vec3 light_color = vec3(1, 1, 1);
+    vec3 diffuse_color = ambient + light_color * diffuse;
 
-    // Specular lighting.
-    vec3 M = pos2.xyz;
-    vec3 O = v_eye_position.xyz;
-    vec3 L = u_light_spec_position;
-    vec3 K = normalize(normalize(L - M) + normalize(O - M));
-    // WARNING: abs() is necessary, otherwise weird bugs may appear with some
-    // GPU drivers...
-    float specular = clamp(pow(abs(dot(normal, K)), 40.), 0.0, 1.0);
-    vec3 v_light = vec3(1., 1., 1.);
-    gl_FragColor.rgb = (.15*v_color + .55*diffuse * v_color
-                        + .35*specular * v_light);
+    // Specular color
+    //   reflect light wrt normal for the reflected ray, then
+    //   find the angle made with the eye
+    vec3 eye = vec3(0, 0, -1);
+    float specular = dot(reflect(v_light_direction, normal), eye);
+    specular = clamp(specular, 0.0, 1.0);
+    // raise to the material's shininess, multiply with a
+    // small factor for spread
+    specular = pow(specular, 80);
+    vec3 specular_color = light_color * specular;
+    
+    gl_FragColor = vec4(v_color * diffuse_color + specular_color, 1);
+    gl_FragDepth = v_depth - .5 * z * v_depth_radius;
 }
 """
 
-class MySpheresVisual(visuals.Visual):
-    """Visual that draws a 3d plot
+class SpheresVisual(visuals.Visual):
+    """Visual that draws many spheres.
     
     Parameters
     ----------
     coordinates: array of coordinates
     color: array of colors
     radius: array of radius
-    W: width of canvas
-    H: height of canvas
     """
-    def __init__(self, coordinates, color, radius, W, H):
+    def __init__(self, coordinates, color, radius):
         visuals.Visual.__init__(self, vertex, fragment)
-        
-        self.size = W,H
-        #Camera settings
-        self.translate = 120
-        self.view = translate((0,0, -self.translate), dtype=np.float32)
-        self.model = np.eye(4, dtype=np.float32)
-        self.projection = perspective(45.0, self.size[0] / float(self.size[1]), 1.0, 1000.0)
-        
-        self.shared_program['u_model'] = self.model
-        self.shared_program['u_view'] = self.view
-        self.shared_program['u_projection'] = self.projection
         
         self.natoms = len(coordinates)
         
         #Loading data and type
-        self.load_data()
+        self._load_data()
         self._draw_mode = 'points'
+        self.set_gl_state('translucent', depth_test=True, cull_face=False)        
         
-    def load_data(self):
-        
+    def _load_data(self):
         """Make an array with all the data and load it into VisPy Gloo"""
-        
         data = np.zeros(self.natoms, [('a_position', np.float32, 3),
                             ('a_color', np.float32, 4),
                             ('a_radius', np.float32, 1)])
@@ -130,49 +129,31 @@ class MySpheresVisual(visuals.Visual):
 
         self.shared_program.bind(gloo.VertexBuffer(data))
         
-        self.shared_program['u_light_position'] = 0., 0., 2.
-        self.shared_program['u_light_spec_position'] = -5., 5., -5.
+        self.shared_program['u_light_position'] = 5., -5., 5.
     
     def _prepare_transforms(self,view):
-        view.view_program.vert['transform'] = view.get_transform()
+        view.view_program.vert['visual_to_framebuffer'] = view.get_transform('visual', 'framebuffer')
+        view.view_program.vert['framebuffer_to_visual'] = view.get_transform('framebuffer', 'visual')
+        view.view_program.vert['framebuffer_to_render'] = view.get_transform('framebuffer', 'render')
 
-from Bio.PDB import PDBParser,DSSP
 
-from molecular_data import crgbaDSSP, restype, colorrgba, vrad, resdict
+Spheres = scene.visuals.create_visual_node(SpheresVisual)
 
-pdbdata = 'data/1yd9.pdb'
-parser = PDBParser(QUIET=True, PERMISSIVE=True)
-structure = parser.get_structure('model',pdbdata)
 
-def centroid(arr):
-    length = arr.shape[0]
-    sum_x = np.sum(arr[:, 0])
-    sum_y = np.sum(arr[:, 1])
-    sum_z = np.sum(arr[:, 2])
-    return sum_x/length, sum_y/length, sum_z/length
+if __name__ == '__main__':
+    from vispy import scene
 
-atoms = [atom for atom in structure.get_atoms()]
-natoms = len(atoms)
-#atom coordinates
-coordinates = np.array([atom.coord for atom in atoms])
-center = centroid(coordinates)
-coordinates -= center
-#atom color
-color = [colorrgba(atom.get_id()) for atom in atoms]
-#atom radius
-radius = [vrad(atom.get_id()) for atom in atoms]
+    canvas = scene.SceneCanvas(keys='interactive', app='pyqt4', bgcolor='white',
+                            size=(1000, 800), show=True)
+    view = canvas.central_widget.add_view()
+    view.camera = scene.ArcballCamera(fov=70, distance=50)
 
-W,H = 1200, 800
+    N = 2000
+    coordinates = np.random.normal(size=(N, 3), scale=10)
+    color = np.random.random(size=(N, 4))
+    color[:,3] = 1.0
+    radius = np.random.normal(size=N, loc=4.0, scale=0.5)
 
-MySpheres = scene.visuals.create_visual_node(MySpheresVisual)
+    spheres = [Spheres(coordinates,color,radius,parent=view.scene)]
 
-canvas = scene.SceneCanvas(keys='interactive', app='pyqt4', bgcolor='white',
-                           size=(W, H), show=True)
-
-view = canvas.central_widget.add_view()
-
-view.camera = ArcballCamera(fov=50, distance=200)
-
-spheres = [MySpheres(coordinates,color,radius,W,H,parent=view.scene)]
-
-canvas.app.run()
+    #canvas.app.run()
