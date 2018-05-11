@@ -71,8 +71,6 @@ canvas = scene.SceneCanvas(keys='interactive', app='pyqt4', bgcolor='white', tit
 view = canvas.central_widget.add_view()
 view.camera = ArcballCamera(fov=95, distance=(max(abs(np.concatenate(coordinates))) + 40))
 
-print color2
-
 Plot3D(coordinates, marker_size=radius, width=0.0, color='red', face_color=color2, edge_color='b', symbol='o', parent=view.scene)
 for i in range(len(chains)):
     Plot3D(chain_coords[i], marker_size=0.0, width=10.0, color=chain_colors[i], parent=view.scene)
