@@ -1,3 +1,5 @@
+# Code based on Luke Campagnola's Spheres visual, 2018.
+
 import numpy as np
 from vispy import app, gloo, visuals, scene
 
