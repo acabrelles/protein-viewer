@@ -56,7 +56,7 @@ Execute the command for the example:
 $ python pandaviewer.py data/1yd9.pdb
 ```
 
-Controls are are:
+Controls are:
 
 1: CPK
 
