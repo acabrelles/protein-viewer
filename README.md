@@ -11,7 +11,7 @@ The libraries are:
 
 ### Requirements
 * Numpy
-* BioPython
+* BioPython and DSSP
 * VisPy and PyQt4
 * Tkinter
 * Panda3D (extra)
