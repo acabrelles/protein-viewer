@@ -29,24 +29,32 @@ In the data folder there's a PDB file provided for testing, `1yd9.pdb`
 ## Tkinter
 To load the GUI, execute the next command:
 
-```$ python pviewer.py```
+```
+$ python pviewer.py
+```
 
 A window with the settings to fiddle with will appear.
 
 ## MatViewer
 When importing this package, you can use the next command to represent your protein:
 
-```MatViewer(data.pdb, [cpk|aminoacid|backbone|dssp])``` 
+```
+MatViewer(data.pdb, [cpk|aminoacid|backbone|dssp])
+``` 
 
 ## VisPyViewer
 When importing this package, you can use the next command to repressent your protein:
 
-```VisPyViewer(data.pdb, [cpk|aminoacid|backbone|dssp])```
+```
+VisPyViewer(data.pdb, [cpk|aminoacid|backbone|dssp])
+```
 
 ## PANDA3D - WIP
 Execute the command for the example: 
 
-```$ python pandaviewer.py data/1yd9.pdb```
+```
+$ python pandaviewer.py data/1yd9.pdb
+```
 
 Controls are are:
 
