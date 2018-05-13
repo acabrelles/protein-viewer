@@ -250,9 +250,6 @@ def atom_information(pdbdata,mode):
         #atom radius
         radius = np.array([vrad(atom.get_id()) for atom in atoms])
 
-atom_information('data/1yd9.pdb',mode='cpk')
-
-
 class VisPyViewer(object):
     visualization_modes = ['cpk','backbone','aminoacid', 'dssp']
     
