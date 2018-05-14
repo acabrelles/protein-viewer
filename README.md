@@ -1,25 +1,62 @@
 # protein-viewer
-Using matplotlib and Panda3D for viewing proteins through their PDB archives.
+Using matplotlib, VisPy and Panda3D for viewing proteins through their PDB archives.
 
 This project has as an objective using different libraries for viewing 3D protein models.
 
 The libraries are:
 
-· Mathematical library, matplotlib
+* Mathematical library, matplotlib
+* OpenGL based library, VisPy
+* Videogames engine library, Panda3D. This one is extra to the project.
 
-· Videogame engine library, Panda3D
+### Requirements
+* Numpy
+* BioPython and DSSP
+* VisPy and PyQt4
+* Tkinter
+* Panda3D (extra)
 
-MATPLOTLIB
+# Commands
+There's 4 visualizations per library:
 
-Execute the command python matviewer.py data/1yd9.pdb "mode"
+* CPK: Atoms are coloured by the CPK standard.
+* Aminoacid: Atoms change color depending on the type of residue they belong to.
+* Backbone: Chains representations, showing only the CA-N bonds of the skeleton.
+* DSSP: Protein structure prediction, showing only the CA-N bonds of the skeleton.
 
-4 possible modes: cpk, aminoacid, backbone and dssp
+In the data folder there's a PDB file provided for testing, `1yd9.pdb`
 
-PANDA3D
+## Tkinter
+To load the GUI, execute the next command:
 
-Execute the command python pandaviewer.py data/1yd9.pdb for the example
+```
+$ python pviewer.py
+```
 
-Commands are:
+A window with the settings to fiddle with will appear.
+
+## MatViewer
+When importing this package, you can use the next command to represent your protein:
+
+```
+MatViewer(data.pdb, [cpk|aminoacid|backbone|dssp])
+``` 
+
+## VisPyViewer
+When importing this package, you can use the next command to repressent your protein:
+
+```
+VisPyViewer(data.pdb, [cpk|aminoacid|backbone|dssp])
+```
+
+## PANDA3D - WIP
+Execute the command for the example: 
+
+```
+$ python pandaviewer.py data/1yd9.pdb
+```
+
+Controls are:
 
 1: CPK
 

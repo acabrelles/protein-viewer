@@ -1,3 +1,5 @@
+#Spheres Visual by Luke Campagnola, 2018.
+
 import numpy as np
 from vispy import app, gloo, visuals, scene
 
