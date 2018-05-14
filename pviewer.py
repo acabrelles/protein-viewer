@@ -26,7 +26,6 @@ class Protein_Viewer:
 
         #enter archive
         global folder_path
-        global filename
         
         folder_path = StringVar()
         
