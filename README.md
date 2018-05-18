@@ -39,14 +39,14 @@ A window with the settings to fiddle with will appear.
 When importing this package, you can use the next command to represent your protein:
 
 ```
-MatViewer(data.pdb, [cpk|aminoacid|backbone|dssp])
+MatViewer(data/1yd9.pdb, [cpk|aminoacid|backbone|dssp])
 ``` 
 
 ## VisPyViewer
 When importing this package, you can use the next command to repressent your protein:
 
 ```
-VisPyViewer(data.pdb, [cpk|aminoacid|backbone|dssp])
+VisPyViewer(data/1yd9.pdb, [cpk|aminoacid|backbone|dssp])
 ```
 
 ## PANDA3D - WIP
