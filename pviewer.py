@@ -12,6 +12,10 @@ def browse_button():
     filename = tkFileDialog.askopenfilename(filetypes = (("pdb files","*.pdb"),("all files","*.*")),
                                             title='Select your PDB file')
     folder_path.set(filename)
+    
+    endname = "..." + filename[-9:]
+    
+    pathname.set(endname)
 
 class Protein_Viewer:
     
@@ -26,13 +30,16 @@ class Protein_Viewer:
 
         #enter archive
         global folder_path
+        global pathname
         
         folder_path = StringVar()
+        pathname = StringVar()
+        pathname.set("...")
         
         self.title1 = Label(frame, text="Select your file:").grid(row=0,columnspan=2, sticky=W, pady=(0,5))
         
         self.browseb = Button(frame, text="Browse", command=browse_button).grid(row=1, column=0,sticky=W)
-        self.pathlabel = Label(frame, textvariable=folder_path, width=12).grid(row=1, column=1, sticky=W)
+        self.pathlabel = Label(frame, textvariable=pathname, width=12).grid(row=1, column=1, sticky=W)
       
         #library choice
         
@@ -79,7 +86,7 @@ class Protein_Viewer:
 
 root = Tk()
 root.title("Protein Viewer")
-
+root.resizable(width=False, height=False)
 app = Protein_Viewer(root)
 
 root.mainloop()
