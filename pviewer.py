@@ -13,8 +13,11 @@ def browse_button():
                                             title='Select your PDB file')
     folder_path.set(filename)
     
-    endname = "..." + filename[-9:]
-    
+    try:
+        endname = "..." + filename[-9:]
+    except:
+        endname = filename
+
     pathname.set(endname)
 
 class Protein_Viewer:
