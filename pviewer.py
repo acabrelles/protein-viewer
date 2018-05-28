@@ -59,7 +59,7 @@ class Protein_Viewer:
         self.title3 = Label(frame, text="Select the visualization type:").grid(row=4, columnspan=2,sticky=W, pady=(15,5))
         
         self.vtype = StringVar()
-        choices = ['CPK','Residue type','Chains','DSSP Prediction']
+        choices = ['CPK','Residue type','Chains','DSSP program']
         
         self.vtype.set('CPK')
         
@@ -74,7 +74,7 @@ class Protein_Viewer:
         
     def vis_options(self):
         
-        choices_dict = {'CPK':'cpk','Residue type':'aminoacid','Chains':'backbone','DSSP Prediction':'dssp'}
+        choices_dict = {'CPK':'cpk','Residue type':'aminoacid','Chains':'backbone','DSSP program':'dssp'}
             
         if folder_path.get()[-4:] != '.pdb':
             tkMessageBox.showerror("Error", "You have not selected a PDB file")
